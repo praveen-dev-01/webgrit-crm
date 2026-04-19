@@ -18,8 +18,14 @@ export default function Dashboard() {
   const conversionRate = totalLeads ? ((wonClientsCount / totalLeads) * 100).toFixed(1) : 0;
   
   const revenueWon = wonLeads.reduce((acc, l) => acc + (Number(l.deal_value) || 0), 0);
+  
   const pipelineValue = leads
     .filter(l => !['Won ✅', 'Lost ❌'].includes(l.pipeline_stage))
+    .reduce((acc, l) => acc + (Number(l.deal_value) || 0), 0);
+    
+  // Revenue Forecasting: Deals close to winning
+  const potentialRevenue = leads
+    .filter(l => ['Proposal', 'Negotiating'].includes(l.pipeline_stage))
     .reduce((acc, l) => acc + (Number(l.deal_value) || 0), 0);
 
   const today = startOfToday();
@@ -35,7 +41,8 @@ export default function Dashboard() {
     { label: 'Total Leads', value: totalLeads, icon: Users, color: 'text-blue-600', bg: 'bg-blue-100' },
     { label: 'Won Clients', value: `${wonClientsCount} (${conversionRate}%)`, icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-100' },
     { label: 'Revenue Won', value: formatCurrency(revenueWon), icon: IndianRupee, color: 'text-[#026cfe]', bg: 'bg-[#026cfe]/10' },
-    { label: 'Pipeline Value', value: formatCurrency(pipelineValue), icon: Activity, color: 'text-orange-600', bg: 'bg-orange-100' }
+    { label: 'Pipeline Value', value: formatCurrency(pipelineValue), icon: Activity, color: 'text-orange-600', bg: 'bg-orange-100' },
+    { label: 'Forecast (Hot)', value: formatCurrency(potentialRevenue), icon: Activity, color: 'text-purple-600', bg: 'bg-purple-100' }
   ];
 
   return (
@@ -45,7 +52,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {stats.map((stat, i) => {
           const Icon = stat.icon;
           return (

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { X, Edit2, Trash2, Calendar, IndianRupee, MessageCircle, Clock } from 'lucide-react';
+import { X, Edit2, Trash2, Calendar, IndianRupee, MessageCircle, Clock, Flame } from 'lucide-react';
 import { useLeads } from '../context/LeadContext';
-import { pipelineStages, stageColors, formatCurrency, cn } from '../lib/utils';
+import { pipelineStages, stageColors, formatCurrency, cn, calculateLeadScore } from '../lib/utils';
 import { format, parseISO } from 'date-fns';
 import LeadModal from './LeadModal';
 
@@ -41,6 +41,9 @@ export default function LeadDetailPanel({ lead, isOpen, onClose }) {
     ? format(parseISO(lead.follow_up_date), 'MMM dd, yyyy')
     : 'No Date Set';
 
+  const score = calculateLeadScore(lead);
+  const isHot = score > 60;
+
   return (
     <>
       <div 
@@ -48,19 +51,31 @@ export default function LeadDetailPanel({ lead, isOpen, onClose }) {
         onClick={onClose}
       />
       
-      <div className="fixed inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out border-l border-gray-200 flex flex-col pt-safe">
+      <div className={cn(
+        "fixed inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out border-l border-gray-200 flex flex-col pt-safe",
+        isHot && "ring-4 ring-orange-500/20 border-l-orange-500"
+      )}>
         
         {/* Header */}
         <div className="flex-none p-6 border-b border-gray-100 flex items-start justify-between bg-gray-50/50">
           <div>
             <h2 className="text-2xl font-bold font-syne text-gray-900 mb-2">{lead.name}</h2>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               <span className={cn(
                 "px-2.5 py-1 rounded-full text-xs font-bold border inline-flex items-center",
                 stageColors[quickStage] || stageColors["New Lead"]
               )}>
                 {quickStage}
               </span>
+              
+              <span className={cn(
+                "px-2.5 py-1 rounded-full text-xs font-bold border flex items-center gap-1",
+                isHot ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-gray-100 text-gray-600 border-gray-200"
+              )}>
+                <Flame size={14} className={isHot ? "text-orange-500" : "text-gray-400"} />
+                Score: {score}
+              </span>
+
               <a 
                 href={`https://wa.me/${lead.phone_number?.replace(/[^0-9]/g, '')}`} 
                 target="_blank" 

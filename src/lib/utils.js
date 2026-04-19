@@ -39,3 +39,24 @@ export function formatCurrency(amount) {
     maximumFractionDigits: 0,
   }).format(amount || 0);
 }
+
+export function calculateLeadScore(lead) {
+  if (!lead) return 0;
+  if (lead.pipeline_stage === 'Lost ❌') return 0;
+  if (lead.pipeline_stage === 'Won ✅') return 100;
+
+  let score = 10; // Base score
+
+  // Score based on stage
+  if (lead.pipeline_stage === 'Contacted') score += 10;
+  if (lead.pipeline_stage === 'Discovery Done') score += 30;
+  if (lead.pipeline_stage === 'Proposal Sent') score += 50;
+
+  // Score based on deal value (cap at +30 for deals over ₹100,000)
+  const value = Number(lead.deal_value) || 0;
+  if (value > 10000) score += 10;
+  if (value > 50000) score += 10;
+  if (value > 100000) score += 10;
+
+  return Math.min(score, 99); // Max 99 unless Won
+}

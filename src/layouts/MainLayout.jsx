@@ -1,32 +1,46 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Kanban, CalendarClock, Plus, BarChart } from 'lucide-react';
+import { LayoutDashboard, Users, Kanban, CalendarClock, Plus, BarChart, LogOut, Calendar, Moon, Sun } from 'lucide-react';
 import { useLeads } from '../context/LeadContext';
+import { useAuth } from '../context/AuthContext';
 import { isToday, parseISO } from 'date-fns';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import LeadModal from '../components/LeadModal';
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/leads', label: 'All Leads', icon: Users },
   { path: '/pipeline', label: 'Pipeline', icon: Kanban },
+  { path: '/calendar', label: 'Calendar', icon: Calendar },
   { path: '/follow-ups', label: 'Follow-ups', icon: CalendarClock },
   { path: '/analytics', label: 'Analytics', icon: BarChart },
 ];
 
 export default function MainLayout() {
   const { leads } = useLeads();
+  const { signOut } = useAuth();
   const location = useLocation();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') === 'dark');
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDark]);
 
   // Calculate Due Today
   const dueTodayCount = leads.filter(l => l.follow_up_date && isToday(parseISO(l.follow_up_date))).length;
 
   return (
-    <div className="flex h-screen bg-[#f8fafc] text-gray-900 overflow-hidden">
+    <div className="flex h-screen bg-[#f8fafc] dark:bg-[#0a1628] text-gray-900 dark:text-gray-100 overflow-hidden transition-colors duration-300">
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-gray-200 bg-white">
-        <div className="p-6 border-b border-gray-100">
-          <h1 className="text-2xl font-bold flex items-center gap-2 tracking-tight text-[#026cfe]">
+      <aside className="hidden md:flex flex-col w-64 border-r border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 backdrop-blur-md transition-colors duration-300">
+        <div className="p-6 border-b border-gray-100 dark:border-white/10">
+          <h1 className="text-2xl font-bold flex items-center gap-2 tracking-tight text-[#026cfe] dark:text-blue-400">
             <span className="bg-[#026cfe] text-white rounded px-2 py-0.5 text-xl">CRM</span> Webgrit
           </h1>
         </div>
@@ -41,8 +55,8 @@ export default function MainLayout() {
                 to={item.path}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium ${
                   isActive 
-                    ? 'bg-[#026cfe]/10 text-[#026cfe]' 
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
+                    ? 'bg-[#026cfe]/10 text-[#026cfe] dark:text-blue-400' 
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-white/5'
                 }`}
               >
                 <Icon size={20} />
@@ -56,6 +70,24 @@ export default function MainLayout() {
             );
           })}
         </nav>
+
+        <div className="p-4 border-t border-gray-100 dark:border-white/10 flex flex-col gap-2">
+          <button
+            onClick={() => setIsDark(!isDark)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-gray-500 dark:text-gray-400 hover:text-[#026cfe] hover:bg-blue-50 dark:hover:bg-white/5 rounded-xl transition-all font-medium"
+          >
+            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+          </button>
+          
+          <button
+            onClick={() => signOut()}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 text-gray-500 dark:text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all font-medium"
+          >
+            <LogOut size={20} />
+            <span>Sign Out</span>
+          </button>
+        </div>
       </aside>
 
       {/* Main Content Area */}
@@ -66,13 +98,22 @@ export default function MainLayout() {
             <h1 className="text-xl font-bold text-[#026cfe]">CRM Webgrit</h1>
           </div>
           <div className="flex-1"></div>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 bg-[#026cfe] hover:bg-[#0256cc] text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-md shadow-[#026cfe]/20 border border-[#026cfe]/20"
-          >
-            <Plus size={18} />
-            <span className="hidden sm:inline">Add Lead</span>
-          </button>
+          
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => signOut()}
+              className="md:hidden p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <LogOut size={20} />
+            </button>
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 bg-[#026cfe] hover:bg-[#0256cc] text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-md shadow-[#026cfe]/20 border border-[#026cfe]/20"
+            >
+              <Plus size={18} />
+              <span className="hidden sm:inline">Add Lead</span>
+            </button>
+          </div>
         </header>
 
         {/* Page Content */}
