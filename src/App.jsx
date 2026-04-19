@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import OneSignal from 'react-onesignal';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LeadProvider } from './context/LeadContext';
 import MainLayout from './layouts/MainLayout';
@@ -22,6 +24,29 @@ function ProtectedRoute({ children }) {
 }
 
 function App() {
+  useEffect(() => {
+    const initOneSignal = async () => {
+      try {
+        const appId = import.meta.env.VITE_ONESIGNAL_APP_ID || "YOUR_ONESIGNAL_APP_ID_HERE";
+        if (appId && appId !== "YOUR_ONESIGNAL_APP_ID_HERE") {
+          await OneSignal.init({
+            appId,
+            safari_web_id: "web.onesignal.auto.34f3144b-3497-4c5c-a43c-a5d9eb9bdd56",
+            allowLocalhostAsSecureOrigin: true,
+            notifyButton: {
+              enable: true,
+            },
+          });
+        } else {
+          console.warn("OneSignal App ID is not configured. Push notifications are disabled.");
+        }
+      } catch (e) {
+        console.error("OneSignal initialization failed", e);
+      }
+    };
+    initOneSignal();
+  }, []);
+
   return (
     <AuthProvider>
       <LeadProvider>
