@@ -10,6 +10,8 @@ export default function AllLeads() {
   const { leads, loading, error } = useLeads();
   const [search, setSearch] = useState('');
   const [stageFilter, setStageFilter] = useState('All');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [selectedLead, setSelectedLead] = useState(null);
 
   const filteredLeads = useMemo(() => {
@@ -21,9 +23,18 @@ export default function AllLeads() {
       
       const matchStage = stageFilter === 'All' || lead.pipeline_stage === stageFilter;
       
-      return matchSearch && matchStage;
+      let matchDate = true;
+      if (startDate || endDate) {
+        const leadDateStr = lead.created_at ? lead.created_at.substring(0, 10) : '';
+        if (leadDateStr) {
+          if (startDate && leadDateStr < startDate) matchDate = false;
+          if (endDate && leadDateStr > endDate) matchDate = false;
+        }
+      }
+
+      return matchSearch && matchStage && matchDate;
     });
-  }, [leads, search, stageFilter]);
+  }, [leads, search, stageFilter, startDate, endDate]);
 
   const handleExportCSV = () => {
     if (filteredLeads.length === 0) return;
@@ -84,8 +95,8 @@ export default function AllLeads() {
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
+      <div className="flex flex-col md:flex-row gap-4 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input 
             type="text"
@@ -95,7 +106,7 @@ export default function AllLeads() {
             className="w-full bg-white border border-gray-200 shadow-sm rounded-xl pl-10 pr-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-[#026cfe] focus:ring-1 focus:ring-[#026cfe] transition-all"
           />
         </div>
-        <div className="w-full md:w-64 relative">
+        <div className="w-full md:w-48 relative">
           <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <select 
             value={stageFilter}
@@ -105,6 +116,23 @@ export default function AllLeads() {
             <option value="All">All Stages</option>
             {pipelineStages.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
+        </div>
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <input 
+            type="date" 
+            value={startDate}
+            onChange={e => setStartDate(e.target.value)}
+            className="w-full md:w-auto bg-white border border-gray-200 shadow-sm rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-[#026cfe] focus:ring-1 focus:ring-[#026cfe] cursor-pointer"
+            title="Start Date (Added on or after)"
+          />
+          <span className="text-gray-400 font-medium">to</span>
+          <input 
+            type="date" 
+            value={endDate}
+            onChange={e => setEndDate(e.target.value)}
+            className="w-full md:w-auto bg-white border border-gray-200 shadow-sm rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:border-[#026cfe] focus:ring-1 focus:ring-[#026cfe] cursor-pointer"
+            title="End Date (Added on or before)"
+          />
         </div>
       </div>
 
